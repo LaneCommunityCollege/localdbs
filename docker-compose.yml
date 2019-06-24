@@ -1,0 +1,65 @@
+version: "3.3"
+
+networks:
+  dbnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: dbnet
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: localdbs_mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - type: bind
+        source: ./data/mysql
+        target: /var/lib/mysql
+      - type: bind
+        source: ./mysql.custom.cnf
+        target: /etc/mysql/conf.d/99-custom.cnf
+    ports:
+      - 127.0.0.1:43306:3306
+    networks:
+      - dbnet
+  adminer:
+    image: adminer
+    container_name: localdbs_adminer
+    restart: always
+    ports:
+      - 127.0.0.1:48080:8080
+    networks:
+      - dbnet
+  postgres:
+    image: postgres:11
+    container_name: localdbs_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: localpost
+      POSTGRES_PASSWORD: password
+    volumes:
+      - type: bind
+        source: ./data/postgresql
+        target: /var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:45432:5432
+    networks:
+      - dbnet
+  pgadmin:
+    image: dpage/pgadmin4:4.8
+    container_name: localdbs_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@localhost.local
+      PGADMIN_DEFAULT_PASSWORD: password
+    volumes:
+      - type: bind
+        source: ./data/pgadmin
+        target: /var/lib/pgadmin
+    ports:
+      - 127.0.0.1:40080:80
+    networks:
+      - dbnet
